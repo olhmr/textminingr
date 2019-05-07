@@ -77,13 +77,21 @@ frequency <- bind_rows(mutate(tidy_bronte, author = "Brontë Sisters"),
   gather(author, proportion, `Brontë Sisters`:`H.G. Wells`) # Gather up Brontë Sisters and H.G. Wells again to enable comparison of them to Jane Austen
 
 library(scales)
-ggplot(frequency, aes(x = proportion, y = `Jane Austen`, color = abs(`Jane Austen` - proportion))) + 
-  geom_abline(color = "gray40", lty = 2) + 
-  geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) + 
-  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1.5) + 
-  scale_x_log10(labels = percent_format()) + 
-  scale_y_log10(labels = percent_format()) + 
-  scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
-  facet_wrap(~author, ncol = 2) + 
-  theme(legend.position = "none") + 
-  labs(y = "Jane Austen", x = NULL)
+ggplot(frequency, aes(x = proportion, # Proportion of usage in Brontë / Wells
+                      y = `Jane Austen`, # Proportion of usage in Austen
+                      color = abs(`Jane Austen` - proportion))) + # Colour according to difference
+  geom_abline(color = "gray40", lty = 2) + # Line with slope 1 to show skew
+  geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) + # Avoid overlap with jitter
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1.5) + # Skip overlapping items
+  scale_x_log10(labels = percent_format()) + # Log-scale to make it easier to read
+  scale_y_log10(labels = percent_format()) + # Log-scale to make it easier to read
+  scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") + # Define colour gradient
+  facet_wrap(~author, ncol = 2) + # Split the Brontë and Wells plots
+  theme(legend.position = "none") + # Remove legend
+  labs(y = "Jane Austen", x = NULL) # Add labels
+
+cor.test(data = frequency[frequency$author == "Brontë Sisters", ], 
+         ~ proportion + `Jane Austen`)
+
+cor.test(data = frequency[frequency$author == "H.G. Wells", ], 
+         ~ proportion + `Jane Austen`)
