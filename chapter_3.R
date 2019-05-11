@@ -48,3 +48,28 @@ freq_by_rank %>%
   geom_line(size = 1.1, alpha = 0.8, show.legend = FALSE) + 
   scale_x_log10() + 
   scale_y_log10()
+
+book_words <- book_words %>% 
+  bind_tf_idf(word, book, n) # `word` are the tokens, `book` the documents, `n` the count of each token in each document
+book_words
+# For the extremely common words, idf is near log(1) = 0 
+
+book_words %>%
+  select(-total) %>%
+  arrange(desc(tf_idf))
+# Proper nouns dominate the list: Austen's language is apparently mostly
+# consistent, and what changes between novels are the characters, locations, and
+# other names.
+
+book_words %>%
+  arrange(desc(tf_idf)) %>% # Order by descending tf_idf
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% # Factor tokens by reverse order 
+  # If we don't reverse, the highest will be on the bottom after the coordinate flip
+  group_by(book) %>%
+  top_n(15) %>% # Find top 15 for each book
+  ungroup() %>%
+  ggplot(aes(x = word, y = tf_idf, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "tf-idf") +
+  facet_wrap(~book, ncol = 2, scales = "free") +
+  coord_flip()
