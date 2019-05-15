@@ -146,3 +146,21 @@ kjv_bigrams %>%
          !str_detect(word1, "\\d"),
          !str_detect(word2, "\\d")) %>%
   visualise_bigrams()
+
+austen_section_words <- austen_books() %>%
+  filter(book == "Pride & Prejudice") %>% # Only look at Pride & Prejudice
+  mutate(section = row_number() %/% 10) %>% # Divide into 10-row sections
+  filter(section > 0) %>% # Skip first section
+  unnest_tokens(word, text) %>%
+  filter(!word %in% stop_words$word)
+austen_section_words
+
+library(widyr)
+word_pairs <- austen_section_words %>%
+  pairwise_count(item = word, feature = section, sort = TRUE) 
+# For each possible pair of words, count the number of sections which those
+# words co-occur
+word_pairs
+
+word_pairs %>%
+  filter(item1 == "darcy")
