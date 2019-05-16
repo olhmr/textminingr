@@ -164,3 +164,33 @@ word_pairs
 
 word_pairs %>%
   filter(item1 == "darcy")
+
+word_cors <- austen_section_words %>%
+  group_by(word) %>%
+  filter(n() >= 20) %>% # Filter for words that occur in at least 20 sections
+  pairwise_cor(word, section, sort = TRUE)
+word_cors
+
+word_cors %>% 
+  filter(item1 == "pounds")
+
+word_cors %>%
+  filter(item1 %in% c("elizabeth", "pounds", "married", "pride")) %>%
+  group_by(item1) %>%
+  top_n(6) %>%
+  ungroup() %>%
+  mutate(item2 = reorder(item2, correlation)) %>%
+  ggplot(aes(x = item2, y = correlation)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~item1, scales = "free") +
+  coord_flip()
+
+set.seed(2016)
+word_cors %>%
+  filter(correlation > 0.15) %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = correlation), show.legend = FALSE) +
+  geom_node_point(colour = "lightblue", size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE) + # Repel moves labels out of the way from each other
+  theme_void()
