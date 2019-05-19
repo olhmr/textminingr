@@ -55,3 +55,24 @@ year_term_counts %>%
   facet_wrap(~term, scales = "free_y") +
   scale_y_continuous(labels = scales::percent_format()) +
   ylab("% frequency of word in inaugural address")
+
+ap_td %>%
+  cast_dtm(document, term, count)
+
+ap_td %>%
+  cast_dfm(document, term, count)
+
+library(Matrix)
+m <- ap_td %>%
+  cast_sparse(document, term, count)
+class(m)
+
+dim(m)
+
+library(janeaustenr)
+austen_dtm <- austen_books() %>%
+  unnest_tokens(word, text) %>%
+  count(book, word) %>%
+  cast_dtm(book, word, n)
+austen_dtm
+
