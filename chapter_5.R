@@ -76,3 +76,22 @@ austen_dtm <- austen_books() %>%
   cast_dtm(book, word, n)
 austen_dtm
 
+data("acq")
+acq
+acq[[1]]
+
+acq_td <- tidy(acq)
+acq_td
+
+acq_tokens <- acq_td %>%
+  select(-places) %>% # Unclear why
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words, by = "word")
+
+acq_tokens %>%
+  count(word, sort = TRUE)
+
+acq_tokens %>%
+  count(id, word) %>%
+  bind_tf_idf(word, id, n) %>%
+  arrange(desc(tf_idf))
