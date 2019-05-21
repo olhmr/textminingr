@@ -95,3 +95,74 @@ acq_tokens %>%
   count(id, word) %>%
   bind_tf_idf(word, id, n) %>%
   arrange(desc(tf_idf))
+
+library(tm.plugin.webmining) # Fails because missing java
+library(purrr)
+
+company <- c("Microsoft", "Apple", "Google", "Amazon", "Facebook",
+             "Twitter", "IBM", "Yahoo", "Netflix")
+symbol <- c("MSFT", "AAPL", "GOOG", "AMZN", "FB", "TWTR", "IBM", "YHOO", "NFLX")
+download_articles <- function(symbol) {
+  WebCorpus(GoogleFinanceSource(paste0("NASDAQ:", symbol)))
+}
+stock_articles <- tibble(company = company, 
+                         symbol = symbol) %>%
+  mutate(corpus = map(symbol, download_articles)) 
+# Apply function download_articles to each symbol, producing a list that gets
+# stored in corpus
+
+stock_articles
+stock_tokens <- stock_articles %>%
+  unnest(map(corpus, tidy)) %>%
+  unnest_tokens(word, text) %>%
+  select(company, datetimestamp, word, id, heading) 
+stock_tokens
+
+library(stringr)
+stock_tf_idf <- stock_tokens %>%
+  count(company, word) %>%
+  filter(!str_detect(word, "\\d+")) %>%
+  bind_tf_idf(word, company, n) %>%
+  arrange(-tf_idf)
+
+stock_tokens %>%
+  anti_join(stop_words, by = "word") %>%
+  count(word, id, sort = TRUE) %>%
+  inner_join(get_sentiments("afinn"), by = "word") %>%
+  group_by(word) %>%
+  summarise(contribution = sum(n * score)) %>%
+  top_n(12, abs(contribution)) %>%
+  mutate(word = reorder(word, contribution)) %>%
+  ggplot(aes(x = word, y = contribution)) +
+  geom_col() +
+  coord_flip() +
+  labs(y = "Frequency of word * AFINN score")
+
+stock_tokens %>%
+  count(word) %>%
+  inner_join(get_sentiments("loughran"), by = "word") %>%
+  group_by(sentiment) %>%
+  top_n(5, n) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(x = word, y = n)) +
+  geom_col() +
+  coord_flip() +
+  facet_wrap(~sentiment, scales = "free") +
+  ylab("Frequency of this word in the recent financial articles")
+
+stock_sentiment_count <- stock_tokens %>%
+  inner_join(get_sentiments("loughran"), by = "word") %>%
+  count(sentiment, company) %>%
+  spread(sentiment, n, fill = 0)
+stock_sentiment_count
+
+stock_sentiment_count %>%
+  mutate(score = (positive - negative) / (positive + negative)) %>% # Relative difference of positive and negative words
+  mutate(company = reorder(company, score)) %>%
+  ggplot(aes(x = company, y = score, fill = score > 0)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(x = "Company",
+       y = "Positivity score among 20 recent news articles")
+
