@@ -33,3 +33,10 @@ beta_spread <- ap_topics %>%
   filter(topic1 > 0.001 | topic2 > 0.001) %>%
   mutate(log_ratio = log2(topic2 / topic1))
 beta_spread
+
+ap_documents <- tidy(ap_lda, matrix = "gamma")
+ap_documents
+
+tidy(AssociatedPress) %>%
+  filter(document == 6) %>%
+  arrange(desc(count))
