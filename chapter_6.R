@@ -61,3 +61,28 @@ word_counts <- by_chapter_word %>%
   count(document, word, sort = TRUE) %>%
   ungroup()
 word_counts
+
+chapters_dtm <- word_counts %>%
+  cast_dtm(document, word, n)
+chapters_dtm
+
+chapters_lda <- LDA(chapters_dtm, k = 4, control = list(seed = 1234))
+chapters_lda
+
+chapter_topics <- tidy(chapters_lda, matrix = "beta")
+chapter_topics
+
+top_terms <- chapter_topics %>%
+  group_by(topic) %>%
+  top_n(5, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+top_terms
+
+library(ggplot2)
+top_terms %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(x = term, y = beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) + 
+  facet_wrap(~topic, scales = "free") +
+  coord_flip()
