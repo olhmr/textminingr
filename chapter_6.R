@@ -86,3 +86,34 @@ top_terms %>%
   geom_col(show.legend = FALSE) + 
   facet_wrap(~topic, scales = "free") +
   coord_flip()
+
+chapters_gamma <- tidy(chapters_lda, matrix = "gamma")
+chapters_gamma
+
+chapters_gamma <- chapters_gamma %>%
+  separate(document, c("title", "chapter"), sep = "_", convert = TRUE) # Converts gives us integers in the chapter column
+chapters_gamma
+
+chapters_gamma %>%
+  mutate(title = reorder(title, gamma * topic)) %>%
+  ggplot(aes(x = factor(topic), y = gamma)) + 
+  geom_boxplot() + 
+  facet_wrap(~title)
+
+chapter_classifications <- chapters_gamma %>%
+  group_by(title, chapter) %>%
+  top_n(1, gamma) %>% # Find the top association for each chapter: i.e., classification
+  ungroup()
+chapter_classifications
+
+book_topics <- chapter_classifications %>%
+  count(title, topic) %>%
+  group_by(title) %>%
+  top_n(1, n) %>%
+  ungroup() %>%
+  transmute(consensus = title, topic) # Gets a list of books and which topics they're associated with
+
+chapter_classifications %>% 
+  inner_join(book_topics, by = "topic") %>%
+  filter(title != consensus) # Find mismatches
+# Despite the worrying boxplot, only two chapters from Great Expecations were misclassified
