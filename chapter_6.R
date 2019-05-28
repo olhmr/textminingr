@@ -117,3 +117,37 @@ chapter_classifications %>%
   inner_join(book_topics, by = "topic") %>%
   filter(title != consensus) # Find mismatches
 # Despite the worrying boxplot, only two chapters from Great Expecations were misclassified
+
+assignments <- augment(chapters_lda, data = chapters_dtm)
+assignments
+
+assignments <- assignments %>%
+  separate(document, c("title", "chapter"), sep = "_", convert = TRUE) %>%
+  inner_join(book_topics, by = c(".topic" = "topic"))
+assignments
+
+assignments %>%
+  count(title, consensus, wt = count) %>%
+  group_by(title) %>%
+  mutate(percent = n / sum(n)) %>%
+  ggplot(aes(x = consensus, y = title, fill = percent)) + 
+  geom_tile() + 
+  scale_fill_gradient2(high = "red", label = scales::percent_format()) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.grid = element_blank()) + 
+  labs(x = "Book words were assigned to",
+       y = "Book words came from",
+       fill = "% of assignments")
+
+wrong_words <- assignments %>%
+  filter(title != consensus)
+wrong_words
+
+wrong_words %>%
+  count(title, consensus, term, wt = count) %>%
+  ungroup() %>%
+  arrange(desc(n))
+
+word_counts %>%
+  filter(word == "flopson") # Illustrates the risk with LDA being stochastic
