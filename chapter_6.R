@@ -151,3 +151,20 @@ wrong_words %>%
 
 word_counts %>%
   filter(word == "flopson") # Illustrates the risk with LDA being stochastic
+
+library(mallet)
+collapsed <- by_chapter_word %>%
+  anti_join(stop_words, by = "word") %>% # Remove stop words
+  mutate(word = str_replace(word, "'", "")) %>% # Remove apostrophes from words
+  group_by(document) %>%
+  summarise(text = paste(word, collapse = " ")) # Paste all words to one string
+file.create(empty_file <- tempfile())
+docs <- mallet.import(collapsed$document, collapsed$text, empty_file)
+mallet_model <- MalletLDA(num.topics = 4)
+mallet_model$loadDocuments(docs)
+mallet_model$train(100) # Train with 100 iterations
+
+tidy(mallet_model)
+tidy(mallet_model, matrix = "gamma")
+term_counts <- rename(word_counts, term = word) # augment requires "term" as column name
+augment(mallet_model, term_counts)
