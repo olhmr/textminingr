@@ -78,3 +78,17 @@ word_ratios %>%
   coord_flip() +
   ylab("log odds ratio (David / Julia)") +
   scale_fill_discrete(name = "", labels = c("David", "Julia"))
+
+words_by_time <- tidy_tweets %>%
+  filter(!str_detect(word, "^@")) %>%
+  mutate(time_floor = floor_date(timestamp, unit = "1 month")) %>%
+  count(time_floor, person, word) %>%
+  group_by(person, time_floor) %>%
+  mutate(time_total = sum(n)) %>%
+  group_by(person, word) %>%
+  mutate(word_total = sum(n)) %>%
+  ungroup() %>%
+  rename(count = n) %>%
+  filter(word_total > 30)
+words_by_time
+
