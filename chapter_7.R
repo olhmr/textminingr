@@ -92,3 +92,27 @@ words_by_time <- tidy_tweets %>%
   filter(word_total > 30)
 words_by_time
 
+nested_data <- words_by_time %>%
+  nest(-word, -person)
+nested_data
+
+library(purrr)
+nested_models <- nested_data %>%
+  mutate(models = map(data, ~glm(cbind(count, time_total) ~ time_floor, .,
+                                 family = "binomial")))
+# https://stackoverflow.com/questions/9111628/logistic-regression-cbind-command-in-glm
+# count = successes, time_total = trials; essentially computing probability of word showing
+# up in a given time period based on the number of times it showed up there and the number
+# of times it showed up overall
+
+nested_models
+
+library(broom)
+slopes <- nested_models %>%
+  unnest(map(models, tidy)) %>%
+  filter(term == "time_floor") %>%
+  mutate(adjusted.p.value = p.adjust(p.value))
+
+top_slopes <- slopes %>%
+  filter(adjusted.p.value < 0.05)
+top_slopes
