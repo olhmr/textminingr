@@ -116,3 +116,17 @@ slopes <- nested_models %>%
 top_slopes <- slopes %>%
   filter(adjusted.p.value < 0.05)
 top_slopes
+
+words_by_time %>%
+  inner_join(top_slopes, by = c("word", "person")) %>%
+  filter(person == "David") %>%
+  ggplot(aes(x = time_floor, y = count / time_total, color = word)) +
+  geom_line(size = 1.3) +
+  labs(x = NULL, y = "Word frequency")
+
+words_by_time %>%
+  inner_join(top_slopes, by = c("word", "person")) %>%
+  filter(person == "Julia") %>%
+  ggplot(aes(x = time_floor, y = count / time_total, color = word)) +
+  geom_line(size = 1.3) +
+  labs(x = NULL, y = "Word frequency")
