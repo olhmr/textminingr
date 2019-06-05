@@ -118,7 +118,7 @@ top_slopes <- slopes %>%
 top_slopes
 
 words_by_time %>%
-  inner_join(top_slopes, by = c("word", "person")) %>%
+  inner_join(top_slopes, by = c("word", "person")) %>% # Leaves only top slopes
   filter(person == "David") %>%
   ggplot(aes(x = time_floor, y = count / time_total, color = word)) +
   geom_line(size = 1.3) +
@@ -130,3 +130,26 @@ words_by_time %>%
   ggplot(aes(x = time_floor, y = count / time_total, color = word)) +
   geom_line(size = 1.3) +
   labs(x = NULL, y = "Word frequency")
+
+tweets_julia <- read_csv("data/juliasilge_tweets.csv")
+tweets_david <- read_csv("data/drob_tweets.csv")
+tweets <- bind_rows(tweets_julia %>%
+                      mutate(person = "Julia"),
+                    tweets_david %>%
+                      mutate(person = "David")) %>%
+  mutate(created_at = ymd_hms(created_at))
+
+tidy_tweets <- tweets %>%
+  filter(!str_detect(text, "^(RT|@)")) %>% # Remove re-tweets and @ mentions
+  mutate(text = str_remove_all(text, remove_reg)) %>%
+  unnest_tokens(word, text, token = "tweets", strip_url = TRUE) %>%
+  filter(!word %in% stop_words$word,
+         !word %in% str_remove_all(stop_words$word, "'"))
+tidy_tweets
+
+total <- tidy_tweets %>%
+  group_by(person, id) %>%
+  summarise(rts = first(retweets)) %>%
+  group_by(person) %>%
+  summarise(total_rts = sum(rts))
+total
