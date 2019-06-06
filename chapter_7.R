@@ -147,9 +147,23 @@ tidy_tweets <- tweets %>%
          !word %in% str_remove_all(stop_words$word, "'"))
 tidy_tweets
 
-total <- tidy_tweets %>%
+totals <- tidy_tweets %>%
   group_by(person, id) %>%
   summarise(rts = first(retweets)) %>%
   group_by(person) %>%
   summarise(total_rts = sum(rts))
-total
+totals
+
+word_by_rts <- tidy_tweets %>%
+  group_by(id, word, person) %>%
+  summarise(rts = first(retweets)) %>%
+  # Count number of times tweet-word-person combination is retweeted
+  group_by(person, word) %>%
+  summarise(retweets = median(rts), uses = n()) %>%
+  # Median number each person gets each word retweeted + number of times each word was used by each person
+  left_join(totals) %>%
+  filter(retweets != 0) %>%
+  ungroup()
+word_by_rts %>%
+  filter(uses >= 5) %>%
+  arrange(desc(retweets))
