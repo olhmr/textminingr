@@ -167,3 +167,18 @@ word_by_rts <- tidy_tweets %>%
 word_by_rts %>%
   filter(uses >= 5) %>%
   arrange(desc(retweets))
+
+word_by_rts %>%
+  filter(uses >= 5) %>%
+  group_by(person) %>%
+  top_n(10, retweets) %>%
+  arrange(retweets) %>%
+  ungroup() %>%
+  mutate(word = factor(word, unique(word))) %>%
+  ungroup() %>%
+  ggplot(aes(x = word, y = retweets, fill = person)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~person, scales = "free", ncol = 2) +
+  coord_flip() +
+  labs(x = NULL,
+       y = "Median # of retweets for tweets containing each word")
