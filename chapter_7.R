@@ -169,12 +169,12 @@ word_by_rts %>%
   arrange(desc(retweets))
 
 word_by_rts %>%
-  filter(uses >= 5) %>%
+  filter(uses >= 5) %>% # At least 5 uses
   group_by(person) %>%
-  top_n(10, retweets) %>%
+  top_n(10, retweets) %>% # Top 10 retweets by person
   arrange(retweets) %>%
   ungroup() %>%
-  mutate(word = factor(word, unique(word))) %>%
+  mutate(word = factor(word, unique(word))) %>% # Make word a factor
   ungroup() %>%
   ggplot(aes(x = word, y = retweets, fill = person)) +
   geom_col(show.legend = FALSE) +
@@ -182,3 +182,21 @@ word_by_rts %>%
   coord_flip() +
   labs(x = NULL,
        y = "Median # of retweets for tweets containing each word")
+
+totals <- tidy_tweets %>%
+  group_by(person, id) %>%
+  summarise(favourites = first(favorites)) %>% 
+  # Count number of favourites for each person and tweet id
+  group_by(person) %>%
+  summarise(total_favourites = sum(favourites)) 
+  # Sum number of favourites for each person
+
+word_by_favs <- tidy_tweets %>%
+  group_by(id, word, person) %>%
+  summarise(favs = first(favorites)) %>%
+  # Count number of favourites for each tweet, word, and person combination
+  group_by(person, word) %>%
+  summarise(favourites = median(favs), uses = n()) %>%
+  left_join(totals) %>%
+  filter(favourites != 0) %>%
+  ungroup()
