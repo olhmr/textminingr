@@ -200,3 +200,18 @@ word_by_favs <- tidy_tweets %>%
   left_join(totals) %>%
   filter(favourites != 0) %>%
   ungroup()
+
+word_by_favs %>%
+  filter(uses >= 5) %>%
+  group_by(person) %>%
+  top_n(10, favourites) %>%
+  arrange(favourites) %>%
+  ungroup() %>%
+  mutate(word = factor(word, unique(word))) %>%
+  ungroup() %>%
+  ggplot(aes(x = word, y = favourites, fill = person)) +
+  geom_col(show.legend = FALSE) + 
+  facet_wrap(~person, scales = "free", ncol = 2) +
+  coord_flip() +
+  labs(x = NULL,
+       y = "Median # of favourites for tweets containing each word")
