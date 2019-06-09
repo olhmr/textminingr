@@ -157,7 +157,7 @@ totals
 word_by_rts <- tidy_tweets %>%
   group_by(id, word, person) %>%
   summarise(rts = first(retweets)) %>%
-  # Count number of times tweet-word-person combination is retweeted
+  # first gets rid of issues with duplicate entries
   group_by(person, word) %>%
   summarise(retweets = median(rts), uses = n()) %>%
   # Median number each person gets each word retweeted + number of times each word was used by each person
@@ -186,7 +186,7 @@ word_by_rts %>%
 totals <- tidy_tweets %>%
   group_by(person, id) %>%
   summarise(favourites = first(favorites)) %>% 
-  # Count number of favourites for each person and tweet id
+  # first gets rid of issues with duplicate entries
   group_by(person) %>%
   summarise(total_favourites = sum(favourites)) 
   # Sum number of favourites for each person
@@ -194,7 +194,7 @@ totals <- tidy_tweets %>%
 word_by_favs <- tidy_tweets %>%
   group_by(id, word, person) %>%
   summarise(favs = first(favorites)) %>%
-  # Count number of favourites for each tweet, word, and person combination
+  # first gets rid of issues with duplicate entries
   group_by(person, word) %>%
   summarise(favourites = median(favs), uses = n()) %>%
   left_join(totals) %>%
