@@ -35,3 +35,22 @@ nasa_desc <- nasa_desc %>%
 
 nasa_title
 nasa_desc
+
+nasa_title %>%
+  count(word, sort = TRUE)
+# as.data.table(nasa_title)[, .(count = .N), by = .(word)][order(-count), ]
+
+my_stopwords <- tibble(word = c(as.character(1:10),
+                                "v1", "v03", "l2", "l3", "l4", "v5.2.0",
+                                "v003", "v004", "v006", "v7", "ii", "v1.0"))
+nasa_title <- nasa_title %>%
+  anti_join(my_stopwords)
+nasa_desc <- nasa_desc %>%
+  anti_join(my_stopwords)
+
+nasa_keyword %>%
+  group_by(keyword) %>%
+  count(sort = TRUE)
+
+nasa_keyword <- nasa_keyword %>%
+  mutate(keyword = tolower(keyword))
