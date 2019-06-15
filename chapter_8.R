@@ -3,6 +3,9 @@
 library(jsonlite)
 metadata <- fromJSON("https://data.nasa.gov/data.json")
 names(metadata$dataset)
+# This dataset has changed from when the book was written, so the instructions
+# are no longer valid. The below is an attempt to follow the general principle,
+# but it won't match the results exactly.
 
 class(metadata$dataset$title)
 class(metadata$dataset$description)
@@ -54,3 +57,13 @@ nasa_keyword %>%
 
 nasa_keyword <- nasa_keyword %>%
   mutate(keyword = tolower(keyword))
+
+library(widyr)
+title_word_pairs <- nasa_title %>%
+  pairwise_count(word, id, sort = TRUE, upper = FALSE)
+title_word_pairs
+
+desc_word_pairs <- nasa_desc %>%
+  pairwise_count(word, id, sort = TRUE, upper = FALSE)
+desc_word_pairs
+
