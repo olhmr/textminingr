@@ -95,3 +95,38 @@ desc_word_pairs %>%
                  point.padding = unit(0.2, "lines")) + 
   theme_void()
 
+keyword_pairs <- nasa_keyword %>%
+  pairwise_count(keyword, id, sort = TRUE, upper = FALSE) %>%
+  filter(item1 != "ngda") %>% # Just an acronym for National Geospatial Data Asset
+  filter(item2 != "ngda")
+keyword_pairs
+
+set.seed(1234)
+keyword_pairs %>%
+  filter(n >= 300) %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "royalblue") + 
+  geom_node_point(size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE,
+                 point.padding = unit(0.2, "lines")) + 
+  theme_void()
+# National Geospatial Data Asset is pretty much congruent with Earth Science.
+# Centers and laboratories are referred to as completed.
+
+keyword_cors <- nasa_keyword %>%
+  filter(!keyword %in% c("ngda")) %>%
+  group_by(keyword) %>%
+  filter(n() >= 50) %>%
+  pairwise_cor(keyword, id, sort = TRUE, upper = FALSE)
+keyword_cors
+
+set.seed(1234)
+keyword_cors %>%
+  filter(correlation > 0.6) %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = correlation, edge_width = correlation), edge_colour = "royalblue") +
+  geom_node_point(size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE, point.padding = unit(0.2, "lines")) +
+  theme_void()
